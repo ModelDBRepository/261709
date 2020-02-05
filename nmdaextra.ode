@@ -1,0 +1,73 @@
+# simulation recepteurs extrasynaptiques
+
+dV/dt = (-Ina-Ikv-Ica-Ikca-Iinj-Inmda)/Cm
+
+#gating
+
+dh/dt=(hinf(V)-h)/tauh(V)
+ds/dt=(sinf(V)-s)/taus(V)
+da/dt=(ainf(V,Ca)-a)/taua(V,Ca)
+#dCa/dt=f*(-(Ica+Icanm)/(2*GF*AA*d*1e-15)-betaCa*Ca)
+dCa/dt=f*(-(Ica+Icanm*fact)/5.090-betaCa*Ca)
+
+minf(V)=alpham(V)/(alpham(V)+betam(V))
+alpham(V)=7.5*exp(0.081*(V+39))
+betam(V)=7.5*exp(-0.066*(V+39))
+
+ninf(V)=alphan(V)/(alphan(V)+betan(V))
+alphan(V)=0.85*exp(0.073*(V+38))
+betan(V)=0.85*exp(-0.018*(V+38))
+
+hinf(V)=alphah(V)/(alphah(V)+betah(V))
+tauh(V)=max(0.045,1/(alphah(V)+betah(V)))
+alphah(V)=0.6*exp(-0.089*(V+50))
+betah(V)=0.6*exp(0.089*(V+50))
+
+sinf(V)=alphas(V)/(alphas(V)+betas(V))
+taus(V)=1/(alphas(V)+betas(v))
+alphas(V)=8/(1+exp(-0.072*(V-5)))
+betas(V)=(0.1*(V+8.9))/(exp(0.2*(V+8.9))-1)
+
+ainf(V,Ca)=alphaa(V,Ca)/(alphaa(V,Ca)+betaa(V,Ca))
+taua(V,Ca)=1/(alphaa(V,Ca)+betaa(V,Ca))
+alphaa(V,Ca)=12.5/(1+(0.15)*exp(-0.085*V)/Ca)
+betaa(V,Ca)=7.5/(1+Ca/((0.015)*exp(-0.077*V)))
+
+ggnmda=gnmda*1.e-18
+MgB(V)=1/(1+(Mg0*exp(-0.062*V))/3570)
+InaNM=ggnmda*Pna*MgB(V)*((V*GF**2)/(R*Tp))*((Nai-Na0*exp(-(V*GF)/(R*Tp)))/(1-exp(-(V*GF)/(R*Tp))))
+IkNM=ggnmda*Pk*MgB(V)*((V*GF**2)/(R*Tp))*((Ki-K0*exp(-(V*GF)/(R*Tp)))/(1-exp(-(V*GF)/(R*Tp))))
+IcaNM=ggnmda*Pca*MgB(V)*((4*V*GF**2)/(R*Tp))*((Cai*0.001-Ca0*exp(-(2*V*GF)/(R*Tp)))/(1-exp(-(2*V*GF)/(R*Tp))))
+
+#Courants ioniques
+Ina=gna*minf(V)**3*h*(V-Vna)
+Ikv=gk*ninf(V)**4*(V-Vk)
+Ica=gca*s**2*(V-Vca)
+Ikca=gkca*a*(V-Vk)
+Inmda=InaNM+IkNM+IcaNM
+
+#init
+init V=-60, h=0.1, s=0.1, a=0.1, ca=0.1
+
+#parametres variabl)es
+param Iinj=-2, Cm=3.14, gnmda=2,fact=1,betaCa=10,gkca=56.5,gca=58,f=0.01
+
+parametres fixes
+number GF=96500e9, gna=172, gk=28, Vna=54.4,Vk=-88.4, Vca=131
+number Pna=1, Pca=10.6, Pk=1, Nai=18000, Na0=140000, Ki=140000, K0=5000, Cai=0.1, Ca0=2000, Mg0=2000, Tp=308, R=8.314e12,AA=314,d=0.084 
+
+aux alpa=alphaa(V,Ca)
+aux m=minf(V)
+#auxiliaries
+aux currnmda=inmda
+#aux currKV=Ikv
+#aux CA=Ica
+#aux KCA=Ikca
+
+#axes
+@ dt=0.01
+@ nplot=1, yp1=m
+@ bounds =10000
+@ xlo=0, xhi=300, ylo=-80, yhi=20
+#@ nplot=4, yp1=NA, yp2=KV, yp3=CA, yp4=KCA
+done
